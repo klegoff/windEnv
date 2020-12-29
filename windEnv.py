@@ -114,10 +114,11 @@ class qlearning_agent():
 		"""
 		action = self.choose_action()
 		action_idx = self.actions.index(action)
+		old_state = copy.deepcopy(self.state)
 
 		reward, self.state = env.step(self.state, action)
 
-		self.q[tuple(self.state) + (action_idx,)] += self.alpha * (reward + self.gamma * self.q[tuple(self.state)].max() - self.q[tuple(self.state)+ (action_idx,)])
+		self.q[tuple(old_state) + (action_idx,)] += self.alpha * (reward + self.gamma * self.q[tuple(self.state)].max() - self.q[tuple(old_state)+ (action_idx,)])
 
 
 	def show(self,env):
