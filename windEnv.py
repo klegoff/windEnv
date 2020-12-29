@@ -67,7 +67,7 @@ class WindyEnv:
 			reward = 0
 		else :
 			reward = -1
-
+			#reward = -( (state[0]-self.goal[0])**2 + (state[1] - self.goal[1])**2 ) 
 		return reward, state
 
 
@@ -153,8 +153,8 @@ if __name__ == '__main__':
 	alpha = 0.5
 	q=None
 
-	N_gen = 1000
-	max_step = 100
+	N_gen = 100
+	max_step = 1000
 	for n in range(N_gen):
 		#instantiate a new agent with already learned q
 		agent = qlearning_agent(epsilon, env,gamma,alpha,q)
