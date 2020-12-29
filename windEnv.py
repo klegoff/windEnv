@@ -1,0 +1,170 @@
+# coding:utf-8
+
+import random
+import copy
+import numpy as np
+
+
+class WindyEnv:
+	"""
+	Attributes:
+	-wind : np.array([y,x]) containing wind speed
+	-goal : np.array([y,x]), indexes of the final point
+	"""
+	def __init__(self, wind,goal,start):
+		"""
+		inputs :
+		wind : numpy array of wind values 
+		goal : array of int, indexes of the goal on the grid
+		start : array of int, indexes of the starting point of the agent
+		"""
+		self.wind = wind
+		self.goal = goal
+		self.ylimit, self.xlimit = wind.shape[0]-1, wind.shape[1]-1
+		self.start = start
+
+	def step(self,old_state,action):
+		"""
+		state (np.array)
+		action (str)
+		returns reward & new state
+		"""
+		#update the state with the action
+		#action_list = ['left', 'right', 'down', 'up']
+		#operation_list = [[0,-1],[0,1],[1,0],[-1,0]]
+		#state += operation_list[action_list.index(action)]
+		state = copy.deepcopy(old_state)
+		if action == "left":
+			state[1] -=1
+		if action == "right":
+			state[1] +=1
+		if action == "down":
+			state[0] +=1
+		if action == "up":
+			state[0] -=1
+
+		#apply wind force
+		if state[0] < self.ylimit and state[1] < self.xlimit:
+			state[0] -= self.wind[tuple(state)]
+
+
+		# limit x,y to the borders of the grid
+		if state[1] < 0 :
+			state[1] = 0
+
+		elif state[1] > self.xlimit:
+			state[1] = self.xlimit
+
+		if state[0] < 0:
+			state[0] = 0
+
+		elif state[0] >self.ylimit:
+			state[0] = self.ylimit
+
+		#compute reward
+		#reward = 10/(1+np.linalg.norm(state - self.goal))
+		if state == self.goal:
+			reward = 0
+		else :
+			reward = -1
+
+		return reward, state
+
+
+
+class qlearning_agent():
+	"""
+	
+	"""
+	def __init__(self, epsilon,env, gamma, alpha,q=None):
+		self.actions = ['left', 'right', 'down', 'up']
+		self.epsilon = epsilon
+		self.state = copy.deepcopy(env.start)
+		self.gamma = gamma
+		self.alpha = alpha
+		if type(q) == type(None):
+			shape = env.wind.shape + (4,)
+			self.q = np.ones(shape)
+			self.q[tuple(env.goal)] = 0
+		else:
+			self.q = q
+
+	def choose_action(self):
+		"""
+		choose the action
+		randomly or the one the maximise q
+		"""
+
+		if random.random() < self.epsilon:
+			action = random.choice(self.actions)
+
+		else:
+			reduced_q = self.q[tuple(self.state)]
+			q_max = np.max(reduced_q)
+			max_action_idx = np.where(reduced_q== q_max)[0]
+			action = self.actions[random.choice(max_action_idx)]
+
+		return action
+
+	def fitstep(self, env):
+		"""
+		choose an action
+		update the state
+		update the q array
+		"""
+		action = self.choose_action()
+		action_idx = self.actions.index(action)
+
+		reward, self.state = env.step(self.state, action)
+
+		self.q[tuple(self.state) + (action_idx,)] += self.alpha * (reward + self.gamma * self.q[tuple(self.state)].max() - self.q[tuple(self.state)+ (action_idx,)])
+
+
+	def show(self,env):
+		"""
+		show state array
+		"""
+		array = np.zeros(env.wind.shape)
+		array[tuple(self.state)] =1
+		print(array)
+		#return array
+
+
+
+if __name__ == '__main__':
+
+	# create wind array
+	shape = (7,10)
+	wind = np.zeros(shape,dtype=int)
+	wind[:,[3,4,5,8]] = 1
+	wind[:,[6,7]] = 2
+
+	#goal location (y,x)
+	goal = [3,7]
+
+	#starting point (y,x)
+	start = [3,0]
+
+	#create env :
+	env = WindyEnv(wind, goal, start)
+
+	epsilon = 0.1
+	gamma = 0.9
+	alpha = 0.5
+	q=None
+
+	N_gen = 1000
+	max_step = 100
+	for n in range(N_gen):
+		#instantiate a new agent with already learned q
+		agent = qlearning_agent(epsilon, env,gamma,alpha,q)
+		step = 0
+		while step<max_step and agent.state != env.goal:
+			step+=1
+			agent.fitstep(env)
+
+		q = copy.deepcopy(agent.q)
+		print(n,"gen.,\n", step,"step(s)")
+		agent.show(env)
+
+	print(q)
