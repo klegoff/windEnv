@@ -44,7 +44,7 @@ class WindyEnv:
 			state[0] -=1
 
 		#apply wind force
-		if state[0] < self.ylimit and state[1] < self.xlimit:
+		if state[0] <= self.ylimit and state[1] <= self.xlimit:
 			state[0] -= self.wind[tuple(state)]
 
 
