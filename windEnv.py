@@ -70,12 +70,7 @@ class WindyEnv:
 			#reward = -( (state[0]-self.goal[0])**2 + (state[1] - self.goal[1])**2 ) 
 		return reward, state
 
-
-
-class qlearning_agent():
-	"""
-	
-	"""
+class agent():
 	def __init__(self, epsilon,env, gamma, alpha,q=None):
 		self.actions = ['left', 'right', 'down', 'up']
 		self.epsilon = epsilon
@@ -106,6 +101,25 @@ class qlearning_agent():
 
 		return action
 
+
+	def show(self,env):
+		"""
+		show state array
+		"""
+		array = np.zeros(env.wind.shape)
+		array[tuple(self.state)] =1
+		print(array)
+		#return array
+
+class qlearning_agent(agent):
+	"""
+	class for qlearning agent
+	heriting from agent class
+	"""
+	def __init__(self, epsilon,env, gamma, alpha,q=None):
+		agent.__init__(self, epsilon,env, gamma, alpha,q=None)
+		self.type = "qlearning"
+
 	def fitstep(self, env):
 		"""
 		choose an action
@@ -121,14 +135,36 @@ class qlearning_agent():
 		self.q[tuple(old_state) + (action_idx,)] += self.alpha * (reward + self.gamma * self.q[tuple(self.state)].max() - self.q[tuple(old_state)+ (action_idx,)])
 
 
-	def show(self,env):
+class sarsa_agent(agent):
+	"""
+	class for sarsa agent
+	heriting from agent class
+	"""
+	def __init__(self, epsilon,env, gamma, alpha,q=None):
+		agent.__init__(self, epsilon,env, gamma, alpha,q=None)
+		self.type = "sarsa"
+
+		# make a first step to initialize previous action and previous reward
+		self.previous_action = self.choose_action()
+		self.previous_reward, self.state = env.step(self.state, self.previous_action)
+
+	def fitstep(self, env):
 		"""
-		show state array
+		choose an action
+		update the state
+		update the q array
 		"""
-		array = np.zeros(env.wind.shape)
-		array[tuple(self.state)] =1
-		print(array)
-		#return array
+		new_action = self.choose_action()
+		new_action_idx = self.actions.index(new_action)
+
+		old_state = copy.deepcopy(self.state)
+
+		reward, self.state = env.step(self.state, new_action)
+
+		prev_action_idx = self.actions.index(self.previous_action)
+
+		self.q[tuple(old_state) + (prev_action_idx,)] += self.alpha * (reward + self.gamma * self.q[tuple(self.state)  + (new_action_idx,)] - self.q[tuple(old_state)+ (prev_action_idx,)])
+
 
 
 
