@@ -80,7 +80,7 @@ class agent():
 		if type(q) == type(None):
 			#print("init q")
 			shape = env.wind.shape + (4,)
-			self.q = np.ones(shape)
+			self.q = -np.ones(shape)
 			self.q[tuple(env.goal)] = 0
 		else:
 			self.q = copy.deepcopy(q)
@@ -145,8 +145,9 @@ class sarsa_agent(agent):
 		agent.__init__(self, epsilon,env, gamma, alpha,q=q)
 		self.type = "sarsa"
 
-		# make a first step to initialize previous action and previous reward
+		# make a first step to initialize previous action, reward and state
 		self.previous_action = self.choose_action()
+		self.previous_state = copy.deepcopy(self.state)
 		self.previous_reward, self.state = env.step(self.state, self.previous_action)
 
 	def fitstep(self, env):
@@ -155,18 +156,20 @@ class sarsa_agent(agent):
 		update the state
 		update the q array
 		"""
-		new_action = self.choose_action()
-		new_action_idx = self.actions.index(new_action)
+		# compute new action, and get indexes of previous & current actions
+		action = self.choose_action()
+		action_idx = self.actions.index(action)
+		previous_action_idx = self.actions.index(self.previous_action)
 
-		old_state = copy.deepcopy(self.state)
+		self.previous_state = copy.deepcopy(self.state)
+		reward, self.state = env.step(self.state, action)
 
-		reward, self.state = env.step(self.state, new_action)
+		#update q values
+		self.q[tuple(self.previous_state) + (previous_action_idx,)] += self.alpha * (self.previous_reward + self.gamma * self.q[tuple(self.state)  + (action_idx,)] - self.q[tuple(self.previous_state)+ (previous_action_idx,)])
 
-		prev_action_idx = self.actions.index(self.previous_action)
-
-		self.q[tuple(old_state) + (prev_action_idx,)] += self.alpha * (reward + self.gamma * self.q[tuple(self.state)  + (new_action_idx,)] - self.q[tuple(old_state)+ (prev_action_idx,)])
-
-
+		# update preivous_* attributes
+		self.previous_reward = reward
+		self.previous_action = action
 
 
 if __name__ == '__main__':
