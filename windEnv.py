@@ -78,11 +78,12 @@ class agent():
 		self.gamma = gamma
 		self.alpha = alpha
 		if type(q) == type(None):
+			#print("init q")
 			shape = env.wind.shape + (4,)
 			self.q = np.ones(shape)
 			self.q[tuple(env.goal)] = 0
 		else:
-			self.q = q
+			self.q = copy.deepcopy(q)
 
 	def choose_action(self):
 		"""
@@ -117,7 +118,7 @@ class qlearning_agent(agent):
 	heriting from agent class
 	"""
 	def __init__(self, epsilon,env, gamma, alpha,q=None):
-		agent.__init__(self, epsilon,env, gamma, alpha,q=None)
+		agent.__init__(self, epsilon,env, gamma, alpha,q=q)
 		self.type = "qlearning"
 
 	def fitstep(self, env):
@@ -141,7 +142,7 @@ class sarsa_agent(agent):
 	heriting from agent class
 	"""
 	def __init__(self, epsilon,env, gamma, alpha,q=None):
-		agent.__init__(self, epsilon,env, gamma, alpha,q=None)
+		agent.__init__(self, epsilon,env, gamma, alpha,q=q)
 		self.type = "sarsa"
 
 		# make a first step to initialize previous action and previous reward
