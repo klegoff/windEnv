@@ -198,7 +198,8 @@ if __name__ == '__main__':
 	max_step = 1000
 	for n in range(N_gen):
 		#instantiate a new agent with already learned q
-		agent = qlearning_agent(epsilon, env,gamma,alpha,q)
+		agent = qlearning_agent(epsilon, env,gamma,alpha,q=q)
+		#agent = sarsa_agent(epsilon, env, gamma, alpha, q)
 		step = 0
 		while step<max_step and agent.state != env.goal:
 			step+=1
